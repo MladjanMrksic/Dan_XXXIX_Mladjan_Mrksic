@@ -1,6 +1,9 @@
-test:test:00:00:01
-t:t:00:01:00
-ggg:ssss:01:01:01
-autor:pesma:00:00:30
-Mrksic:Mladjan:1.00:00:00
-Test test:testset:01:01:13
+Disturbed:Ten Thousand Fists:00:03:32
+Disturbed:Stricked:00:04:05
+Disturbed:The Night:00:04:44
+Metallica:Master of Puppets:00:08:35
+Metallica:Blackened:00:06:41
+Metallica:Enter Sandman:00:05:34
+Avenged Sevenfold:Almost Easy:00:04:01
+Avenged Sevenfold:Gunslinger:00:04:11
+Avenged Sevenfold:Seize the Day:00:05:32
