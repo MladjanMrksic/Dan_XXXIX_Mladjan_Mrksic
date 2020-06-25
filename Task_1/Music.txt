@@ -1,5 +1,3 @@
-Autor1:NazivPesme1:00:01:30
-Autor2:NazivPesme2:00:02:30
-Autor3:NazivPesme3:00:04:30
-Autor4:NazivPesme4:00:03:30
-Autor5:NazivPesme5:00:01:50
+test:test:00:00:01
+t:t:00:01:00
+ggg:ssss:01:01:01

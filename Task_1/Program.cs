@@ -9,6 +9,7 @@ namespace Task_1
 {
     class Program
     {
+        static Program pr = new Program();
         static List<Song> songList = new List<Song>();
         static StreamReader sr;
         static StreamWriter sw;
@@ -17,8 +18,8 @@ namespace Task_1
         static void Main(string[] args)
         {
             Console.WriteLine("\t\t\tWelcome to AudioPlayer");
-            TimeSpan ts = new TimeSpan(1, 2, 3);
-            Console.WriteLine(ts.ToString());
+            pr.LoadAllSongs();
+            pr.MainMenu();
             Console.ReadLine();
         }
         public void MainMenu()
@@ -33,10 +34,10 @@ namespace Task_1
                 switch (choice)
                 {
                     case 1:
-
+                        pr.AddSong();
                         break;
                     case 2:
-
+                        pr.ListAllSongs();
                         break;
                     default:
                         Console.WriteLine("Please chose an existing option.");
@@ -58,14 +59,14 @@ namespace Task_1
             int choice;
             do
             {
-                Console.WriteLine(@"Are you sure you want to add {0}:{1} {2}?\n1)Yes\n2)No", author, song, ts);
+                Console.WriteLine("Are you sure you want to add {0}:{1} {2}?\n1)Yes\n2)No", author, song, ts);
             } while (int.TryParse(Console.ReadLine(), out choice) == false && (choice == 1 || choice == 2));
             if (choice == 1)
             {
                 songList.Add(new Song(author, song, ts));
-                using (sw = new StreamWriter(songsPath))
+                using (sw = new StreamWriter(songsPath,append:true))
                 {
-                    sw.WriteLine(author + ":" + song + " " + ts);
+                    sw.WriteLine(author + ":" + song + ":" + ts);
                 }
             }
             else
@@ -73,12 +74,33 @@ namespace Task_1
                 return;
             }
         }
+        public void ListAllSongs()
+        {            
+            foreach (var song in songList)
+            {
+                Console.WriteLine(song.Author +":"+ song.SongName +" "+ song.Duration);
+            }
+        }
+        public void LoadAllSongs()
+        {
+            using (sr = new StreamReader(songsPath))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] temp = line.Split(':');
+                    TimeSpan tempTS = TimeSpan.Parse(temp[2] + ":" + temp[3] + ":" + temp[4]);
+                    songList.Add(new Song(temp[0], temp[1], tempTS));
+                }
+            }
+        }
+
     }
     public class Song
     {
-        string Author;
-        string SongName;
-        TimeSpan Duration;
+        internal string Author;
+        internal string SongName;
+        internal TimeSpan Duration;
 
         public Song(string author, string songName, TimeSpan duration)
         {
