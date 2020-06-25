@@ -3,14 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Task_1
 {
     class Program
     {
+        static Random rnd = new Random();
+        static EventWaitHandle songReminder = new AutoResetEvent(false);
+        static EventWaitHandle commercials = new AutoResetEvent(false);
+        static object l = new object();
         static Program pr = new Program();
         static List<Song> songList = new List<Song>();
+        static List<string> commercialList = new List<string>();
         static StreamReader sr;
         static StreamWriter sw;
         static string songsPath = @".../.../Music.txt";
@@ -19,6 +25,7 @@ namespace Task_1
         {
             Console.WriteLine("\t\t\tWelcome to AudioPlayer");
             pr.LoadAllSongs();
+            pr.LoadAllCommercials();
             pr.MainMenu();
             Console.ReadLine();
         }
@@ -29,7 +36,7 @@ namespace Task_1
             {
                 do
                 {
-                    Console.WriteLine("Please chose and option from the main menu:\n1)Add new song\n2)List all songs");
+                    Console.WriteLine("Please chose and option from the main menu:\n1)Add new song\n2)List all songs\n3)Play a song");
                 } while (int.TryParse(Console.ReadLine(), out choice)!=true);
                 switch (choice)
                 {
@@ -38,6 +45,9 @@ namespace Task_1
                         break;
                     case 2:
                         pr.ListAllSongs();
+                        break;
+                    case 3:
+                        pr.PlayASong();
                         break;
                     default:
                         Console.WriteLine("Please chose an existing option.");
@@ -70,15 +80,24 @@ namespace Task_1
                 }
             }
             else
-            {
                 return;
-            }
         }
         public void ListAllSongs()
-        {            
-            foreach (var song in songList)
+        {
+            for (int i = 1; i < songList.Count; i++)
             {
-                Console.WriteLine(song.Author +":"+ song.SongName +" "+ song.Duration);
+                Console.WriteLine(i + ") " + songList[i].Author + ":" + songList[i].SongName + " " + songList[i].Duration);
+            }
+        }
+        public void LoadAllCommercials()
+        {
+            using (sr = new StreamReader(commercialsPath))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    commercialList.Add(line);
+                }
             }
         }
         public void LoadAllSongs()
@@ -94,7 +113,57 @@ namespace Task_1
                 }
             }
         }
-
+        public void PlayASong()
+        {
+            Thread t1 = new Thread(new ThreadStart(pr.SongReminder));
+            t1.Start();
+            Thread t2 = new Thread(new ThreadStart(pr.BrodcastCommercial));
+            t2.Start();
+            pr.ListAllSongs();
+            int choice;
+            do
+            {
+                Console.WriteLine("Please chose a song you would like to listen to");
+            } while (int.TryParse(Console.ReadLine(), out choice)!= true && choice > songList.Count);
+            Console.WriteLine("Playing song " + songList[choice].SongName+ " by " + songList[choice].Author + ". Song duration: " + songList[choice].Duration);
+            lock (l)
+            {
+                songReminder.Set();
+                commercials.Set();
+                Thread.Sleep(Convert.ToInt32(songList[choice].Duration.TotalMilliseconds));
+            }
+            songReminder.WaitOne();
+            commercials.WaitOne();
+        }
+        public void SongReminder()
+        {
+            songReminder.WaitOne();
+            while (Monitor.TryEnter(l) == false)
+            {
+                Thread.Sleep(1000);
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine("Song is still playing");
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
+            Monitor.Exit(l);
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Song has finished playing.");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            songReminder.Set();
+        }
+        public void BrodcastCommercial()
+        {
+            commercials.WaitOne();
+            while (Monitor.TryEnter(l) == false)
+            {
+                Thread.Sleep(200);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(commercialList[rnd.Next(0,5)]);
+                Console.ForegroundColor = ConsoleColor.Gray;
+            }
+            Thread.Sleep(100);
+            commercials.Set();
+        }
     }
     public class Song
     {
