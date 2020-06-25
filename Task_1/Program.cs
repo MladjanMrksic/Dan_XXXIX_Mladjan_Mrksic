@@ -28,7 +28,8 @@ namespace Task_1
         static string commercialsPath = @".../.../Commercials.txt";
         static void Main(string[] args)
         {
-            Console.WriteLine("\t\t\tWelcome to AudioPlayer");
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Console.WriteLine("\t\t\t♫ ♪ ♫ Welcome to AudioPlayer ♫ ♪ ♫");
             //Loading all songs and comercials to lists for easier handling
             pr.LoadAllSongs();
             pr.LoadAllCommercials();
@@ -248,14 +249,14 @@ namespace Task_1
             {
                 Thread.Sleep(1000);
                 Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine("Song is still playing");
+                Console.WriteLine("\t\t ♫ ♪ ♫ Song is still playing ♫ ♪ ♫");
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
             //Upon acquiring the lock it imediately releases it
             Monitor.Exit(l);
             //Lets the user know the song has ended or has been canceled
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Song has finished playing.");
+            Console.WriteLine("\t\t ♫ ♪ ♫ Song has finished playing ♫ ♪ ♫");
             Console.ForegroundColor = ConsoleColor.Gray;
             //Lets the PlayASong method know that this thread has finished
             songReminder.Set();
