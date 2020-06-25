@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -39,7 +40,7 @@ namespace Task_1
             {
                 do
                 {
-                    Console.WriteLine("Please chose and option from the main menu:\n1)Add new song\n2)List all songs\n3)Play a song");
+                    Console.WriteLine("Please chose an option from the main menu:\n1)Add new song\n2)List all songs\n3)Play a song\n4)Exit");
                 } while (int.TryParse(Console.ReadLine(), out choice)!=true);
                 switch (choice)
                 {
@@ -52,6 +53,9 @@ namespace Task_1
                     case 3:
                         pr.PlayASong();
                         break;
+                    case 4:
+                        Environment.Exit(0);
+                        break;
                     default:
                         Console.WriteLine("Please chose an existing option.");
                         break;
@@ -60,15 +64,42 @@ namespace Task_1
         }
         public void AddSong()
         {
-            Console.WriteLine("Enter the name of the author:");
-            string author = Console.ReadLine();
-            Console.WriteLine("Enter the name of the song:");
-            string song = Console.ReadLine();
-            TimeSpan ts;
+            string author;
             do
             {
-                Console.WriteLine("Enter the duration of the song in format hours:minutes:seconds :");
-            } while (TimeSpan.TryParse(Console.ReadLine(),out ts) != true);
+                Console.WriteLine("Enter the name of the author (Press ` to go back to main menu)");
+                author = Console.ReadLine();
+                if (author.ToUpper() == "`")
+                {
+                    Console.Clear();
+                    pr.MainMenu();
+                }                   
+            } while (author == null);
+            string song;
+            do
+            {
+                Console.WriteLine("Enter the name of the song (Press ` to go back to main menu)");
+                song = Console.ReadLine();
+                if (song.ToUpper() == "`")
+                {
+                    Console.Clear();
+                    pr.MainMenu();
+                }
+            } while (song == null);
+            TimeSpan ts;
+            string attempt;
+            do
+            {
+                Console.WriteLine("Enter the duration of the song in format hours:minutes:seconds (Press ` to go back to main menu)");
+                attempt = Console.ReadLine();
+                if (attempt.ToUpper() == "`")
+                {
+                    Console.Clear();
+                    pr.MainMenu();
+                    
+                }
+            } while (TimeSpan.TryParseExact(attempt, @"hh\:mm\:ss", null, out ts) != true || ts == new TimeSpan(00,00,00));
+            Console.WriteLine(ts.ToString());
             int choice;
             do
             {
@@ -87,6 +118,7 @@ namespace Task_1
         }
         public void ListAllSongs()
         {
+            Console.Clear();
             for (int i = 1; i < songList.Count; i++)
             {
                 Console.WriteLine(i + ") " + songList[i].Author + ":" + songList[i].SongName + " " + songList[i].Duration);
@@ -129,12 +161,20 @@ namespace Task_1
             t2.Start();
             Thread t3 = new Thread(new ThreadStart(pr.StopPlaying));
             t3.Start();
+            Console.Clear();
             pr.ListAllSongs();
             int choice;
+            string attempt;
             do
             {
-                Console.WriteLine("Please chose a song you would like to listen to");
-            } while (int.TryParse(Console.ReadLine(), out choice)!= true && choice > songList.Count);
+                Console.WriteLine("Please chose a song you would like to listen to (Press ` to go back to main menu)");
+                attempt = Console.ReadLine();
+                if (attempt.ToUpper() == "`")
+                {
+                    Console.Clear();
+                    pr.MainMenu();
+                }
+            } while (int.TryParse(attempt, out choice)!= true && choice > songList.Count);
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("To stop the song, press Esc key.");
