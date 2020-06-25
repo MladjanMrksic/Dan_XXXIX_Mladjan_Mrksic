@@ -10,9 +10,12 @@ namespace Task_1
 {
     class Program
     {
+        static CancellationTokenSource cts;
+        CancellationToken ct;
         static Random rnd = new Random();
         static EventWaitHandle songReminder = new AutoResetEvent(false);
         static EventWaitHandle commercials = new AutoResetEvent(false);
+        static EventWaitHandle stopPlaying = new AutoResetEvent(false);
         static object l = new object();
         static Program pr = new Program();
         static List<Song> songList = new List<Song>();
@@ -115,30 +118,54 @@ namespace Task_1
         }
         public void PlayASong()
         {
+            cts = new CancellationTokenSource();
+            ct = cts.Token;
+            songReminder.Reset();
+            commercials.Reset();
+            stopPlaying.Reset();
             Thread t1 = new Thread(new ThreadStart(pr.SongReminder));
             t1.Start();
             Thread t2 = new Thread(new ThreadStart(pr.BrodcastCommercial));
             t2.Start();
+            Thread t3 = new Thread(new ThreadStart(pr.StopPlaying));
+            t3.Start();
             pr.ListAllSongs();
             int choice;
             do
             {
                 Console.WriteLine("Please chose a song you would like to listen to");
             } while (int.TryParse(Console.ReadLine(), out choice)!= true && choice > songList.Count);
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("To stop the song, press Esc key.");
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Playing song " + songList[choice].SongName+ " by " + songList[choice].Author + ". Song duration: " + songList[choice].Duration);
             lock (l)
             {
                 songReminder.Set();
                 commercials.Set();
-                Thread.Sleep(Convert.ToInt32(songList[choice].Duration.TotalMilliseconds));
+                stopPlaying.Set();
+                for (int i = 0; i < Convert.ToInt32(songList[choice].Duration.TotalMilliseconds); i++)
+                {
+                    if (ct.IsCancellationRequested == false)
+                    {
+                        Thread.Sleep(1);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
             }
             songReminder.WaitOne();
             commercials.WaitOne();
+            stopPlaying.WaitOne();
+            cts.Dispose();
         }
         public void SongReminder()
         {
             songReminder.WaitOne();
-            while (Monitor.TryEnter(l) == false)
+            while (Monitor.TryEnter(l) == false || ct.IsCancellationRequested == false)
             {
                 Thread.Sleep(1000);
                 Console.ForegroundColor = ConsoleColor.Blue;
@@ -146,7 +173,7 @@ namespace Task_1
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
             Monitor.Exit(l);
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Song has finished playing.");
             Console.ForegroundColor = ConsoleColor.Gray;
             songReminder.Set();
@@ -154,15 +181,30 @@ namespace Task_1
         public void BrodcastCommercial()
         {
             commercials.WaitOne();
-            while (Monitor.TryEnter(l) == false)
+            while (Monitor.TryEnter(l) == false || ct.IsCancellationRequested == false)
             {
                 Thread.Sleep(200);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine(commercialList[rnd.Next(0,5)]);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
+            Monitor.Exit(l);
             Thread.Sleep(100);
             commercials.Set();
+        }
+        public void StopPlaying()
+        {
+            stopPlaying.WaitOne();
+            do
+            {
+                while (!Console.KeyAvailable)
+                {
+                    // Do something
+                }
+            } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            cts.Cancel();
+            Thread.Sleep(200);
+            stopPlaying.Set();
         }
     }
     public class Song
